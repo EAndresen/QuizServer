@@ -149,3 +149,6 @@ public class Controller {
         }
     }
 }
+// TODO: Klient 1 låser sig när klient 2 kommer in och börjar svara till servern
+// TODO: När klient 2 skickar rätt svar så nämns klient 1 och 2s namn var annan gång
+// TODO:
