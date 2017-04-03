@@ -1,0 +1,72 @@
+#root {
+    -fx-background-image: url("background.jpg");
+}
+.button {
+    -fx-background-color:
+            linear-gradient(#f2f2f2, #d6d6d6),
+            linear-gradient(#fcfcfc 0%, #d9d9d9 20%, #d6d6d6 100%),
+            linear-gradient(#dddddd 0%, #f6f6f6 50%);
+    -fx-background-radius: 8,7,6;
+    -fx-background-insets: 0,1,2;
+    -fx-text-fill: black;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+.button:hover {
+    -fx-background-color:
+            linear-gradient(#8a8383, #ababab),
+            linear-gradient(#fcfcfc 0%, #ababab 20%, #d6d6d6 100%),
+            linear-gradient(#dddddd 0%, #e7dddd 50%);
+    -fx-background-radius: 8,7,6;
+    -fx-background-insets: 0,1,2;
+    -fx-text-fill: black;
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 5, 0.0 , 0 , 1 );
+}
+.text-field:focused {
+    -fx-faint-focus-color: transparent;
+    -fx-focus-color: rgba(178, 63, 9, 0.9);
+}
+
+
+.table-view:focused{
+    -fx-background-color: transparent;
+}
+.table-view .column-header-background{
+    -fx-background-color: linear-gradient(rgba(171, 171, 171, 0.53) 0%, rgba(66, 65, 65, 0.49) 100%);
+}
+
+.table-view .column-header-background .label{
+    -fx-background-color: transparent;
+    -fx-text-fill: #000000;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+}
+
+.table-view .table-cell{
+    -fx-text-fill: #000000;
+}
+
+.table-row-cell{
+    -fx-background-color: -fx-table-cell-border-color, rgba(97, 97, 97, 0.28);
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:odd{
+    -fx-background-color: -fx-table-cell-border-color, rgba(66, 66, 66, 0.32);
+    -fx-background-insets: 0, 0 0 1 0;
+    -fx-padding: 0.0em; /* 0 */
+}
+
+.table-row-cell:selected {
+    -fx-background-color: rgba(255, 98, 25, 0.81);
+    -fx-background-insets: 0;
+    -fx-background-radius: 1;
+}
+.text-area {
+    -fx-font-size: 12;
+}
+.text-area .content {
+    -fx-background-color: rgba(224, 222, 222, 0.25);
+}

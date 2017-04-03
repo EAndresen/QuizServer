@@ -1,0 +1,15 @@
+{
+  "Questions":
+  [
+     {
+       "questionID"  : "1",
+       "question"    : "Why is the sky blue?",
+       "answer"      : "There is no easy answer"
+     },
+     {
+        "questionID"  : "2",
+        "question"    : "Answer for everything?",
+        "answer"      : "42"
+     }
+  ]
+}
