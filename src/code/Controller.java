@@ -1,4 +1,4 @@
-package sample;
+package code;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -8,6 +8,7 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.Random;
 
 
 public class Controller {
@@ -15,11 +16,16 @@ public class Controller {
     @FXML Button stopServerButton;
     @FXML TextArea serverConsoleLogOutput;
 
+    Questions questions = new Questions();
+
+
+    Random rand = new Random();
+
     private BufferedReader in;
     private PrintStream out;
 
     private static final HashSet<String> names = new HashSet<>();
-    private static HashSet<PrintStream> clientConnection = new HashSet<>();
+    private static final HashSet<PrintStream> clientConnection = new HashSet<>();
 
     public Controller() {
         startServer();
@@ -42,10 +48,10 @@ public class Controller {
                 e.printStackTrace();
             }
 
-
             while (true) {
-                Socket connection = null;
+                Socket connection;
                 try {
+                    assert serverSocket != null;
                     connection = serverSocket.accept();
                     serverOutputThread = new OutputThread(connection);
                     serverConnectionThread = new Thread(serverOutputThread);
@@ -58,6 +64,7 @@ public class Controller {
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    break;
                 }
             }
         };
@@ -75,8 +82,9 @@ public class Controller {
             while (true) {
                 try {
                     Thread.sleep(10000);
+                    String question = questions.getQuestion(rand.nextInt(5 - 1 + 1) + 1);
                     for(PrintStream writer : clientConnection) {
-                        writer.println("What is the solution for everything?");
+                        writer.println(question);
                     }
                 } catch (InterruptedException e) {
                     System.out.println("Sleep exception: " + e);
@@ -121,10 +129,10 @@ public class Controller {
             System.out.println(clientConnection);
 
             while (true) {
-                  String input = null;
+                  String input;
                         try {
                             input = in.readLine();
-                            if(input.equalsIgnoreCase("a")){
+                            if(input.equalsIgnoreCase(questions.getAnswer())){
                                 serverConsoleLogOutput.appendText("Answer: " + input + " Is Correct!");
                                 for(PrintStream writer : clientConnection) {
                                     writer.println("Answer: " + input + " from " + name + " is correct!");
