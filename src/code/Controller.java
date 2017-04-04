@@ -21,14 +21,15 @@ public class Controller {
 
     Random rand = new Random();
 
-    private BufferedReader in;
-    private PrintStream out;
+    private static BufferedReader in;
+    private static PrintStream out;
 
     private static final HashSet<String> names = new HashSet<>();
     private static final HashSet<PrintStream> clientConnection = new HashSet<>();
 
     public Controller() {
         startServer();
+        new sendQuestionThread().start();
         }
 
     public void startServer(){
@@ -60,7 +61,7 @@ public class Controller {
                     serverInputThread = new InputThread(connection);
                     serverInputThread2 = new Thread(serverInputThread);
                     serverInputThread2.start();
-                    System.out.println("New connection");
+                    serverConsoleLogOutput.appendText("New connection \n");
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -79,10 +80,18 @@ public class Controller {
 
         @Override
         public void run() {
+
+        }
+    }
+
+    public class sendQuestionThread extends Thread{
+        public void run() {
+            System.out.println("send Is running");
             while (true) {
                 try {
                     Thread.sleep(10000);
                     String question = questions.getQuestion(rand.nextInt(5 - 1 + 1) + 1);
+                    serverConsoleLogOutput.appendText(question + "\n");
                     for(PrintStream writer : clientConnection) {
                         writer.println(question);
                     }
@@ -96,6 +105,7 @@ public class Controller {
 
     class InputThread implements Runnable {
         private String name;
+        private int score = 0;
 
         InputThread(Socket connection) throws IOException {
             in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -108,7 +118,6 @@ public class Controller {
                 out.println("Please enter a username: ");
                 try {
                     name = in.readLine();
-
                     synchronized (names) {
                         if (!names.contains(name)) {
                             names.add(name);
@@ -123,23 +132,29 @@ public class Controller {
                 }
             }
 
-            out.println("Name accepted: \nWelcome " + name);
+            out.println("Name accepted: \nWelcome " + this.name);
             clientConnection.add(out);
-            System.out.println(names);
-            System.out.println(clientConnection);
+            serverConsoleLogOutput.appendText("New connection name: " + this.name + "\nClient connection: " + clientConnection + "\n");
+
+            for(PrintStream printStream : clientConnection){
+                serverConsoleLogOutput.appendText(String.valueOf(printStream + "\n"));
+            }
 
             while (true) {
                   String input;
                         try {
                             input = in.readLine();
                             if(input.equalsIgnoreCase(questions.getAnswer())){
-                                serverConsoleLogOutput.appendText("Answer: " + input + " Is Correct!");
+                                serverConsoleLogOutput.appendText("Answer: " + input + " Is Correct! \n");
                                 for(PrintStream writer : clientConnection) {
-                                    writer.println("Answer: " + input + " from " + name + " is correct!");
+                                    this.score++;
+                                    writer.println("Answer: " + input + " from " + this.name + " is correct!\n Hens new score is: " + this.score);
                                 }
                             } else {
                                 serverConsoleLogOutput.appendText("Answer: " + input + " Is WRONG! \n");
-                                out.println("Answer: " + input + " Is WRONG!");
+                                for (PrintStream writer : clientConnection) {
+                                    writer.println("Answer: " + input + " from" + name +  " Is WRONG!");
+                                }
                             }
                         } catch (IOException e) {
                             System.out.println("No incoming: " + e);
@@ -149,6 +164,5 @@ public class Controller {
         }
     }
 }
-// TODO: Klient 1 låser sig när klient 2 kommer in och börjar svara till servern
-// TODO: När klient 2 skickar rätt svar så nämns klient 1 och 2s namn var annan gång
-// TODO:
+// TODO: Klient 1 låser sig när klient 2 kommer in och börjar svara till servern.
+// TODO: När klient 2 skickar rätt svar så nämns klient 1 och 2s namn var annan gång.
