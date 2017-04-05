@@ -1,7 +1,7 @@
 package code;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 
 import java.io.*;
@@ -10,37 +10,30 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Random;
 
-
 public class Controller {
-    @FXML Button startServerButton;
-    @FXML Button stopServerButton;
     @FXML TextArea serverConsoleLogOutput;
+    @FXML Label serverStatusLabel;
 
-    Questions questions = new Questions();
+    private Questions questions = new Questions();
+    private Random rand = new Random();
 
+    //Variable to check if correct answer were made.
+    private boolean correctAnswer = false;
 
-    Random rand = new Random();
-
-    private static BufferedReader in;
-    private static PrintStream out;
-
+    //Sets for holding user and client connections
     private static final HashSet<String> names = new HashSet<>();
     private static final HashSet<PrintStream> clientConnection = new HashSet<>();
 
     public Controller() {
-        startServer();
-        new sendQuestionThread().start();
-        }
+        startServer(); //Run the server
+        new sendQuestionThread().start(); //Start sending questions
+    }
 
     public void startServer(){
         Runnable startServerRunnable = () -> {
-            System.out.println("Server is running:");
 
-            OutputThread serverOutputThread;
-            Thread serverConnectionThread;
-
-            InputThread serverInputThread;
-            Thread serverInputThread2;
+            ClientThread clientThread;
+            Thread serverInputThread;
 
             ServerSocket serverSocket = null;
             try {
@@ -54,14 +47,11 @@ public class Controller {
                 try {
                     assert serverSocket != null;
                     connection = serverSocket.accept();
-                    serverOutputThread = new OutputThread(connection);
-                    serverConnectionThread = new Thread(serverOutputThread);
-                    serverConnectionThread.start();
 
-                    serverInputThread = new InputThread(connection);
-                    serverInputThread2 = new Thread(serverInputThread);
-                    serverInputThread2.start();
-                    serverConsoleLogOutput.appendText("New connection \n");
+                    clientThread = new ClientThread(connection);
+                    serverInputThread = new Thread(clientThread);
+                    serverInputThread.start();
+                    serverConsoleLogOutput.appendText("Server : New connection \n");
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -70,28 +60,27 @@ public class Controller {
             }
         };
         new Thread(startServerRunnable).start();
+        System.out.println("Server: is running:");
     }
 
-    class OutputThread implements Runnable {
-        OutputThread(Socket connection) throws IOException {
-            out = new PrintStream(connection.getOutputStream());
-            out.println("Server connected.");
-        }
-
-        @Override
-        public void run() {
-
-        }
-    }
-
+    //Getting a random question and sending to every connection, and server log.
     public class sendQuestionThread extends Thread{
         public void run() {
-            System.out.println("send Is running");
+            System.out.println("Server: send Is running");
             while (true) {
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(10000); //Waiting 10 seconds
+
+                    //Get random question
                     String question = questions.getQuestion(rand.nextInt(5 - 1 + 1) + 1);
-                    serverConsoleLogOutput.appendText(question + "\n");
+
+                    //Correct answer to false
+                    correctAnswer = false;
+
+                    //Print question to log
+                    serverConsoleLogOutput.appendText("Server: " + question + "\n");
+
+                    //Sending the question to all clients connected.
                     for(PrintStream writer : clientConnection) {
                         writer.println(question);
                     }
@@ -103,17 +92,25 @@ public class Controller {
         }
     }
 
-    class InputThread implements Runnable {
+    //Prompt te user to send a user name and storing it,
+    //After that it is listening to incoming text from user
+    class ClientThread implements Runnable {
         private String name;
         private int score = 0;
+        private PrintStream out;
+        private BufferedReader in;
 
-        InputThread(Socket connection) throws IOException {
+        ClientThread(Socket connection) throws IOException {
             in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            out = new PrintStream(connection.getOutputStream());
         }
 
         @Override
         public void run() {
 
+            //Ask the user for a user name, if it is taken it asks again.
+            //Otherwise it is stored.
+            out.println("Server connected.");
             while (true) {
                 out.println("Please enter a username: ");
                 try {
@@ -134,35 +131,47 @@ public class Controller {
 
             out.println("Name accepted: \nWelcome " + this.name);
             clientConnection.add(out);
-            serverConsoleLogOutput.appendText("New connection name: " + this.name + "\nClient connection: " + clientConnection + "\n");
+            serverConsoleLogOutput.appendText("Server: New connection name: " + this.name + "\nServer: Client connection: " + clientConnection + "\n");
 
-            for(PrintStream printStream : clientConnection){
-                serverConsoleLogOutput.appendText(String.valueOf(printStream + "\n"));
-            }
-
+            //Listening to incoming text from user.
             while (true) {
-                  String input;
-                        try {
-                            input = in.readLine();
-                            if(input.equalsIgnoreCase(questions.getAnswer())){
-                                serverConsoleLogOutput.appendText("Answer: " + input + " Is Correct! \n");
-                                for(PrintStream writer : clientConnection) {
-                                    this.score++;
-                                    writer.println("Answer: " + input + " from " + this.name + " is correct!\n Hens new score is: " + this.score);
-                                }
-                            } else {
-                                serverConsoleLogOutput.appendText("Answer: " + input + " Is WRONG! \n");
+                String input;
+                try {
+                    input = in.readLine(); //Store input.
+
+                        //If correct answer haven't ben made.
+                        if (!correctAnswer) {
+
+                            //Check input answer with current correct answer.
+                            if (input.equalsIgnoreCase(questions.getAnswer())) {
+                                serverConsoleLogOutput.appendText("User input: Answer: " + input + " Is Correct! \n");
+
+                                //Add score to player.
+                                this.score++;
                                 for (PrintStream writer : clientConnection) {
-                                    writer.println("Answer: " + input + " from" + name +  " Is WRONG!");
+                                    writer.println("Answer: " + input + " from " + this.name + " is correct!\n" + this.name + " new score is: " + this.score);
+
+                                    //Change correct answer to true.
+                                    correctAnswer = true;
                                 }
+
+                                //If answer were incorrect, tell the user.
+                            } else {
+                                serverConsoleLogOutput.appendText("User input: Answer: " + input + " Is WRONG! \n");
+                                out.println("Answer: " + input + " Is WRONG!");
+
                             }
-                        } catch (IOException e) {
-                            System.out.println("No incoming: " + e);
-                            break;
+
+                        //If correct answer were before, tell the user.
+                        } else {
+                            out.println("To late");
                         }
+                    } catch (IOException e) {
+                        System.out.println("No incoming: " + e);
+                        break;
+                    }
+
             }
         }
     }
 }
-// TODO: Klient 1 låser sig när klient 2 kommer in och börjar svara till servern.
-// TODO: När klient 2 skickar rätt svar så nämns klient 1 och 2s namn var annan gång.

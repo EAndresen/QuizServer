@@ -19,6 +19,7 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
 
+        //Close all running Java threads on application exit.
         primaryStage.setOnCloseRequest(event -> {
             Platform.exit();
             System.exit(0);
