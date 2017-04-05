@@ -149,7 +149,7 @@ public class Controller {
                                 //Add score to player.
                                 this.score++;
                                 for (PrintStream writer : clientConnection) {
-                                    writer.println("Answer: " + input + " from " + this.name + " is correct!\n" + this.name + " new score is: " + this.score);
+                                    writer.println("Answer: " + input + " from " + this.name + " is correct!\n" + this.name + "s new score is: " + this.score);
 
                                     //Change correct answer to true.
                                     correctAnswer = true;
@@ -166,11 +166,10 @@ public class Controller {
                         } else {
                             out.println("To late");
                         }
-                    } catch (IOException e) {
-                        System.out.println("No incoming: " + e);
-                        break;
-                    }
-
+                } catch (IOException e) {
+                    System.out.println("No incoming: " + e);
+                    break;
+                }
             }
         }
     }
